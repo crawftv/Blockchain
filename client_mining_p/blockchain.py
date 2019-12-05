@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from flask import Flask, jsonify, request
 
-DIFFICULTY = 6
+DIFFICULTY = 3
 
 
 class Blockchain(object):
@@ -114,24 +114,37 @@ blockchain = Blockchain()
 @app.errorhandler(Exception)
 @app.route("/mine", methods=["POST"])
 def mine():
-    data = request.get_json()
     try:
+        data = request.get_json()
         if ("proof" in data.keys()) and ("id" in data.keys()):
-            proof = data["proof"]
+            submitted_proof = data["proof"]
             id = data["id"]
-            previous_hash = blockchain.hash(blockchain.last_block)
-            new_block = blockchain.new_block(proof, id, previous_hash)
-            return jsonify("Success"), 200
+
+            # Determine if proof is valid
+            last_block = blockchain.last_block
+            last_blockstring = json.dumps(last_block, sort_keys=True)
+
+            if blockchain.valid_proof(last_blockstring, submitted_proof):
+
+                previous_hash = blockchain.hash(blockchain.last_block)
+                new_block = blockchain.new_block(submitted_proof, previous_hash)
+                r = {
+                    "mesasage": "New Block Forged",
+                    "block": new_block,
+                }
+                return jsonify(r), 200
+            else:
+                return jsonify("Error: Proof not valid"), 400
         else:
-            return jsonify("Error: invalid request"), 400
+            return jsonify("Error: missing keys"), 400
     except Exception:
-        return jsonify("Error: invalid request")
+        return jsonify("Error: invalid request"), 400
 
 
 @app.route("/last_block", methods=["GET"])
 def last_block():
     last_block = blockchain.last_block
-    return jsonify(last_block)
+    return jsonify({"last_block": last_block}), 200
 
 
 @app.route("/chain", methods=["GET"])

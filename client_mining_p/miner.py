@@ -5,7 +5,7 @@ import sys
 import time
 import json
 
-DIFFICULTY = 6
+DIFFICULTY = 3
 
 
 def proof_of_work(last_block):
@@ -66,8 +66,9 @@ if __name__ == "__main__":
             break
 
         # TODO: Get the block from `data` and use it to look for a new proof
+        last_block = data["last_block"]
         start = time.time()
-        new_proof = proof_of_work(data)
+        new_proof = proof_of_work(last_block)
         stop = time.time()
         print(f"Time to find proof: {stop-start} seconds")
 
